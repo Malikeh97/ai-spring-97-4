@@ -34,9 +34,28 @@ def step_gradient(given_b, given_m, given_x, given_y, given_learning_rate):
 def univariate_regression(given_x, given_y, given_b, given_m, given_learning_rate, given_num_of_iter):
     current_b = given_b
     current_m = given_m
+
+    plt.ion()
+
+    fig1 = plt.figure(1)
+    ax = fig1.add_subplot(111)
+    plt.axis([0, given_x.max(), 0, given_y.max()])
+    plt.xlabel('CRIM')
+    plt.ylabel('MEDV')
+    x_arr = np.array(given_x)[0]
+    y_arr = np.array(given_y)[0]
+    _, line = ax.plot(x_arr, y_arr, 'bo', x_arr, current_m * x_arr + current_b, 'r')
+
     errors = [compute_error_for_line_given_points(given_b, given_m, given_x, given_y)]
     for i in range(given_num_of_iter):
         current_b, current_m = step_gradient(current_b, current_m, given_x, given_y, given_learning_rate)
+
+        if i % 50 == 0:
+            line.set_ydata(current_m * x_arr + current_b)
+            fig1.canvas.draw()
+            plt.pause(0.01)
+            print(i)
+
         errors.append(compute_error_for_line_given_points(current_b, current_m, given_x, given_y))
     return current_b, current_m, errors
 
@@ -56,15 +75,6 @@ if __name__ == "__main__":
     # plt.show()
     b, m, errors = univariate_regression(x1, y, b, m, learning_rate, num_of_iter)
     # b, m = univariate_regression(x2, y, b, m, learning_rate, num_of_iter)
-    plt.figure(1)
-    plt.axis([0, x1.max(), 0, y.max()])
-    plt.xlabel('CRIM')
-    plt.ylabel('MEDV')
-    x1_arr = np.array(x1)[0]
-    y_arr = np.array(y)[0]
-    s = m * x1 + b
-    s = np.array(s)[0]
-    plt.plot(x1_arr, y_arr, 'bo', x1_arr, s, 'r')
 
     plt.figure(2)
     plt.axis([0, 1000, 0, errors[0]])
@@ -72,5 +82,6 @@ if __name__ == "__main__":
     plt.ylabel('err')
     plt.plot(errors)
     plt.show()
+    plt.pause(10000)
     err = compute_error_for_line_given_points(b, m, x1, y)
     print(err)
