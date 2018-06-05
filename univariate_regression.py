@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # b, m = univariate_regression(x2, y, b, m, learning_rate, num_of_iter)
 
     plt.figure(2)
-    plt.axis([0, 1000, 0, errors[0]])
+    plt.axis([0, num_of_iter, 0, errors[0]])
     plt.xlabel('iter')
     plt.ylabel('err')
     plt.plot(errors)
