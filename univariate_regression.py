@@ -80,5 +80,5 @@ if __name__ == "__main__":
     plt.plot(errors1)
     plt.show()
     plt.pause(10000)
-    err = compute_error_for_line_given_points(b, m, x1, y)
+    err = compute_error_for_line_given_points(b1, m1, x1, y)
     print(err)
