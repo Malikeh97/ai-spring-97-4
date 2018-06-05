@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 
 COLNUM = (0, 2, 13)
 
+
 def read_file():
     with open('housing.data') as f:
         content = f.readlines()
@@ -12,18 +13,26 @@ def read_file():
     return content
 
 
+def mean_average_error(init_B, init_x, init_y):
+    n = float(init_y.shape[1])
+    e = init_y - (init_B.T * init_x.T)
+    total_error = np.sum(np.sum(e))
+    return total_error / n
+
+
 def compute_error(init_B, init_x, init_y, landa=None):
+    n = float(init_y.shape[1])
     tmp = init_y - (init_B.T * init_x.T)
     total_error = np.sum(np.power(tmp, 2))
     l2norm = landa / 2 * np.sum(np.power(init_B, 2)) if landa is not None else 0
-    return total_error / (float(len(init_y)) * 2) + l2norm
+    return total_error / (n * 2) + l2norm
 
 
 def step_gradient(init_B, init_x, init_y, learning_rate, landa=None):
-    N = float(init_y.shape[1])
+    n = float(init_y.shape[1])
     tmp = init_y - (np.dot(init_B.T, init_x.T))
     l2norm = landa * init_B if landa is not None else 0
-    B_gradient = -(1 / N) * np.dot(tmp, init_x).T + l2norm
+    B_gradient = -(1 / n) * np.dot(tmp, init_x).T + l2norm
     new_B = init_B - (learning_rate * B_gradient)
     return new_B
 
@@ -48,22 +57,24 @@ if __name__ == "__main__":
     Y = np.matrix([x[13] for x in inputs])
     Y = (Y - np.mean(Y, axis=1)) / np.std(Y, axis=1)  # normalized
 
-    iters = 1000
+    iters = 2000
     B, errors = multivariate_regression(X, Y, learning_rate=0.01, num_of_iter=iters)
+    print(B.T)
+    print('MSE = %.20f' % np.asscalar(errors[-1]))
+    print('MAE = %.20f' % mean_average_error(B, X, Y))
 
-    fig1 = plt.figure(1)
+    plt.figure(1)
+    plt.subplot(211)
     y_predict = np.dot(B.T, X.T)
     plt.axis([0, Y.max(), 0, y_predict.max()])
     y_arr = np.array(Y)[0]
     y_predict_arr = np.array(y_predict)[0]
     plt.plot(y_arr, y_predict_arr, 'ro')
 
-    plt.figure(2)
+    plt.subplot(212)
     plt.axis([0, iters, 0, errors[0]])
     plt.xlabel('iter')
     plt.ylabel('err')
     plt.plot(errors)
     plt.show()
-    sum = 0
-    print(B)
-    print(errors[-1])
+
