@@ -18,7 +18,7 @@ def read_file():
 def compute_error(init_B, init_x, init_y):
     tmp = init_y - (init_B.T * init_x.T)
     totalError = np.sum(np.power(tmp, 2))
-    return totalError / ( float(len(init_y)) * 2 )
+    return totalError / (float(len(init_y)) * 2)
 
 
 def step_gradient(init_B, init_x, init_y, lrate):
@@ -30,7 +30,6 @@ def step_gradient(init_B, init_x, init_y, lrate):
 
 
 def multivariate_regression(init_x, init_y, lrate, iters):
-    # plt.ion()
     # fig1 = plt.figure(1)
     # ax = fig1.add_subplot(111)
     # plt.axis([0, x.max(), 0, given_y.max()])
@@ -40,31 +39,30 @@ def multivariate_regression(init_x, init_y, lrate, iters):
     # y_arr = np.array(given_y)[0]
     # _, line = ax.plot(x_arr, y_arr, 'bo', x_arr, m * x_arr + b, 'r')
 
-    # errors = [compute_error_for_line_given_points(b, m, x, given_y)]
-    new_B = np.ones((14,1))
+    new_B = np.ones((14, 1))
+    errors = [compute_error(new_B, init_x, init_y)]
     for i in range(iters):
         # print("---")
         # print(new_B)
         new_B = step_gradient(new_B, init_x, init_y, lrate)
-        print(compute_error(new_B, init_x, init_y))
+        errors.append(compute_error(new_B, init_x, init_y))
         # if i % 50 == 0:
         #     line.set_ydata(m * x_arr + b)
         #     fig1.canvas.draw()
         #     plt.pause(0.01)
         #     print(i)
 
-        # errors.append(compute_error_for_line_given_points(b, m, x, given_y))
-    return new_B
+    return new_B, errors
 
 
 if __name__ == "__main__":
     inputs = read_file()
-    X = np.ones((506,1))
-    T= np.matrix([x[0:13] for x in inputs])
-    T = (T - np.mean(T, axis=0)) / np.std(T, axis=0) #normalized
+    X = np.ones((506, 1))
+    T = np.matrix([x[0:13] for x in inputs])
+    T = (T - np.mean(T, axis=0)) / np.std(T, axis=0)  # normalized
     X = np.append(X, T, axis=1)
     Y = np.matrix([x[13] for x in inputs])
-    # Y = (Y - np.mean(Y, axis=0)) / np.std(Y, axis=0) # normalized
+    Y = (Y - np.mean(Y, axis=1)) / np.std(Y, axis=1)  # normalized
     learning_rate = 0.001
     num_of_iter = 10000
     # plt.plot(x2, y, 'bo')
@@ -72,7 +70,23 @@ if __name__ == "__main__":
     # plt.ylabel('MEDV')
     # plt.xlabel('CRIM')
     # plt.show()
-    B = multivariate_regression(X, Y, learning_rate, num_of_iter)
-    # print(B)
+    B, errors = multivariate_regression(X, Y, learning_rate, num_of_iter)
 
+    fig1 = plt.figure(1)
+    y_predict = np.dot(B.T, X.T)
+    plt.axis([0, Y.max(), 0, y_predict.max()])
+    plt.xlabel('CRIM')
+    plt.ylabel('MEDV')
+    y_arr = np.array(Y)[0]
+    y_predict_arr = np.array(y_predict)[0]
+    plt.plot(y_arr, y_predict_arr, 'ro')
 
+    plt.figure(2)
+    plt.axis([0, num_of_iter, 0, errors[0]])
+    plt.xlabel('iter')
+    plt.ylabel('err')
+    plt.plot(errors)
+    plt.show()
+    sum = 0
+    # plt.pause(10000)
+    print(B)
