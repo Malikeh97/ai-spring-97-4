@@ -15,17 +15,16 @@ def read_file():
     return content
 
 
-def compute_error(b, m, x, y):
-    totalError = np.sum(np.power(y - (m * x + b),2))
-    return totalError / ( float(len(y)) * 2 )
+def compute_error(init_B, init_x, init_y):
+    tmp = init_y - (init_B.T * init_x.T)
+    totalError = np.sum(np.power(tmp, 2))
+    return totalError / ( float(len(init_y)) * 2 )
 
 
 def step_gradient(init_B, init_x, init_y, lrate):
     N = float(init_y.shape[1])
-    tmp = init_y - (init_B.T * init_x.T)
-    B_gradient = -(1 / N) * tmp * init_x
-    print("---")
-    print(B_gradient)
+    tmp = init_y - (np.dot(init_B.T, init_x.T))
+    B_gradient = -(1 / N) * (np.dot(tmp, init_x))
     new_B = init_B - (lrate * B_gradient.T)
     return new_B
 
@@ -42,9 +41,12 @@ def multivariate_regression(init_x, init_y, lrate, iters):
     # _, line = ax.plot(x_arr, y_arr, 'bo', x_arr, m * x_arr + b, 'r')
 
     # errors = [compute_error_for_line_given_points(b, m, x, given_y)]
-    new_B = np.zeros((14,1))
-    for i in range(20):
+    new_B = np.ones((14,1))
+    for i in range(iters):
+        # print("---")
+        # print(new_B)
         new_B = step_gradient(new_B, init_x, init_y, lrate)
+        print(compute_error(new_B, init_x, init_y))
         # if i % 50 == 0:
         #     line.set_ydata(m * x_arr + b)
         #     fig1.canvas.draw()
@@ -58,17 +60,19 @@ def multivariate_regression(init_x, init_y, lrate, iters):
 if __name__ == "__main__":
     inputs = read_file()
     X = np.ones((506,1))
-    X = np.append(X, np.matrix([x[0:13] for x in inputs]), axis=1)
+    T= np.matrix([x[0:13] for x in inputs])
+    T = (T - np.mean(T, axis=0)) / np.std(T, axis=0) #normalized
+    X = np.append(X, T, axis=1)
     Y = np.matrix([x[13] for x in inputs])
+    # Y = (Y - np.mean(Y, axis=0)) / np.std(Y, axis=0) # normalized
     learning_rate = 0.001
-    num_of_iter = 7000
+    num_of_iter = 10000
     # plt.plot(x2, y, 'bo')
     # plt.axis([0, x1.max(), 0, y.max()])
     # plt.ylabel('MEDV')
     # plt.xlabel('CRIM')
     # plt.show()
     B = multivariate_regression(X, Y, learning_rate, num_of_iter)
-    print(B)
-
+    # print(B)
 
 
