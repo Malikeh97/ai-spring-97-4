@@ -16,7 +16,7 @@ def read_file():
 def mean_average_error(init_B, init_x, init_y):
     n = float(init_y.shape[1])
     e = init_y - (init_B.T * init_x.T)
-    total_error = np.sum(np.sum(e))
+    total_error = np.sum(np.abs(e))
     return total_error / n
 
 
