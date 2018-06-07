@@ -15,21 +15,25 @@ def sigmoid(z):
     return 1 / (1 + np.exp(-z))
 
 
-def compute_error(h, y):
-    return (-y * np.log(h) - (1 - y) * np.log(1 - h)).mean()
+def compute_error(h, y, theta, landa=None):
+    l2norm = landa / 2 * np.sum(np.power(theta, 2)) if landa is not None else 0
+    return (-y * np.log(h) - (1 - y) * np.log(1 - h)).mean()+ l2norm
 
 
-def logistic_regression(init_x, init_y):
+def logistic_regression(init_x, init_y, landa=None):
     theta = np.zeros((init_x.shape[1], 1))
     for i in range(num_iter):
         z = np.dot(init_x, theta)
         h = sigmoid(z)
-        gradient = np.dot(init_x.T, (h - init_y.T)) / init_y.size
+        l2norm = landa * theta if landa is not None else 0
+        gradient = np.dot(init_x.T, (h - init_y.T)) / init_y.size + l2norm
         theta -= lr * gradient
         if i % 10000 == 0:
-            print('compute_error: %f' % compute_error(h, init_y))
+            print('compute_error: %f' % compute_error(h, init_y, theta, landa))
     return theta
 
+def predict(data_in, coeffs, threshold):
+    return sigmoid(np.dot(data_in, coeffs)) >= threshold
 
 if __name__ == "__main__":
     inputs = read_file()
@@ -48,8 +52,11 @@ if __name__ == "__main__":
               np.matrix(inputs)[:, 1].max() + 5])
     plt.plot(zeros_x, zeros_y, 'bo', ones_x, ones_y, 'r*')
     # plt.show()
-
+    landa = 0.01
     lr = 0.001
     num_iter = 100000
-    T = logistic_regression(X, Y)
+    T = logistic_regression(X, Y, landa)
     print(T)
+    final_z = np.dot(X, T)
+    final_h = sigmoid(final_z)
+    print('Final Error: %f'% compute_error(final_h, Y, T, landa))
