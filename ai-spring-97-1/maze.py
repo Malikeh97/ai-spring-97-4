@@ -203,7 +203,7 @@ if __name__ == "__main__":
     print(">> Testing Q solver...")
     agent = QLearnAgent()
     agent.initialize(m)
-    agent.train(learning_rate=0.01, gamma=0.5, min_change_per_epoch=0.001)
+    agent.train(learning_rate=0.1, gamma=0.5, min_change_per_epoch=0.001)
     path = agent.solve(m.start)
     try:
         validate_answer(m, path)
