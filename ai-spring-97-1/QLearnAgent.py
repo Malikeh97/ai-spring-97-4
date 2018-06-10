@@ -20,8 +20,8 @@ class QLearnAgent():
         # So Q(A(s,s')) = Q[s][s']
         self.Q = None
 
-        self.num_columns = None
-        self.end_state = None
+        self.num_rows = None
+        self.goal_state = None
         self.num_states = None
         self.next_states = {}
         self.trained = False
@@ -38,12 +38,11 @@ class QLearnAgent():
     def initialize(self, maze):
         if maze is None:
             return
-        maze_fields = maze.get_maze()
-        end_point = maze.get_end_point()
-        if end_point is None:
+        goal = maze.goal
+        if goal is None:
             return
-        self.num_states = len(maze_fields) * len(maze_fields[0])
-        self.num_columns = len(maze_fields[0])
+        self.num_states = len(maze.cells) * len(maze.cells[0])
+        self.num_rows = len(maze.cells[0])
 
         # Begin by initializing the reward matrix to zero connectivity
         #
@@ -51,37 +50,33 @@ class QLearnAgent():
 
         # For each point in the maze, connect it to its parent
         #
-        for y in range(0, len(maze_fields), 1):
-            for x in range(0, len(maze_fields[0]), 1):
-                first_point = (y, x)
-                second_point = maze_fields[y][x]
+        for y in range(len(maze.cells)):
+            for x in range(len(maze.cells[0])):
+                current_cell = (y, x)
+                neighbors = maze.get_neighbors(current_cell)
 
                 # States may not point to themselves
                 #
-                if (first_point[0] != second_point[0] or first_point[1] != second_point[1]):
-                    first_state = self.__maze_dims_to_state(first_point[0], first_point[1])
-                    second_state = self.__maze_dims_to_state(second_point[0], second_point[1])
+                current_state = self.__maze_dims_to_state(current_cell)
+                neighbor_states = []
+                for i in range(len(neighbors)):
+                    neighbor_states.append(self.__maze_dims_to_state(neighbors[i]))
 
-                    # Create a hashtable for neighboring states to avoid continuous iteration over matrix
-                    #
-                    if first_state not in self.next_states:
-                        self.next_states[first_state] = []
-                    self.next_states[first_state].append(second_state)
+                # Create a hashtable for neighboring states to avoid continuous iteration over matrix
+                #
+                if current_state not in self.next_states:
+                    self.next_states[current_state] = []
 
-                    if second_state not in self.next_states:
-                        self.next_states[second_state] = []
-                    self.next_states[second_state].append(first_state)
-
-                    self.R[first_state][second_state] = 0
-                    self.R[second_state][first_state] = 0
+                for i in range(len(neighbors)):
+                    self.next_states[current_state].append(neighbor_states[i])
+                    self.R[current_state][neighbor_states[i]] = 0
 
         # Set terminal state to point to self, as well as all neighbors to point to it
         #
-        self.end_state = self.__maze_dims_to_state(end_point[0], end_point[1])
-        for i in range(0, self.num_states, 1):
-            if self.R[i][self.end_state] != -1:
-                self.R[i][self.end_state] = 1.0
-        self.R[self.end_state][self.end_state] = 1.0
+        self.goal_state = self.__maze_dims_to_state(goal)
+        for i in range(self.num_states):
+            if self.R[i][self.goal_state] != -1 or i == self.goal_state:
+                self.R[i][self.goal_state] = 1.0
 
         # Initialize Q matrix to zeros
         #
@@ -91,7 +86,7 @@ class QLearnAgent():
     # Trains the agent
     # initialize() should have been called before this function is called
     #
-    def train(self, gamma, min_change_per_epoch):
+    def train(self, learning_rate, gamma, min_change_per_epoch):
         print('Training...')
         epoch_iteration = 0
         while True:
@@ -100,14 +95,14 @@ class QLearnAgent():
             # Consider multiple states per epoch.
             # Early termination can happen if same state is picked twice
             #
-            for i in range(0, 10, 1):
+            for i in range(10):
                 # Pick a random starting position
                 #
                 current_state = random.randint(0, self.num_states - 1)
 
                 # Keep iterating until goal is reached
                 #
-                while (current_state != self.end_state):
+                while current_state != self.goal_state:
 
                     # Pick a random next state
                     #
@@ -124,7 +119,8 @@ class QLearnAgent():
 
                     # Set Q value for transition from current->next state via bellman equation
                     #
-                    self.Q[current_state][next_state] = self.R[current_state][next_state] + (gamma * max_q_next_state)
+                    old_q = self.Q[current_state][next_state]
+                    self.Q[current_state][next_state] = old_q + learning_rate * (self.R[current_state][next_state] + (gamma * max_q_next_state) - old_q)
 
                     # Move to next state
                     #
@@ -137,7 +133,7 @@ class QLearnAgent():
             # Check stopping criteria
             diff = np.sum(np.abs(self.Q - previous_q))
             print('In epoch {0}, difference is {1}'.format(epoch_iteration, diff))
-            if (diff < min_change_per_epoch):
+            if diff < min_change_per_epoch:
                 break
 
             epoch_iteration += 1
@@ -148,20 +144,20 @@ class QLearnAgent():
 
     # Given a starting state, predict the optimal path to the ending state
     # This should be called only on a trained agent
-    def solve(self, starting_state):
+    def solve(self, start):
         if not self.trained:
             return []
 
         # The first point in the path is the starting state
         # Translate from (y,x) coordinates into state index
         #
-        path = [starting_state]
-        current_state = self.__maze_dims_to_state(starting_state[0], starting_state[1])
+        path = [start]
+        current_state = self.__maze_dims_to_state(start)
 
         # Keep going until we reach the goal
         # (or we've visited every spot - safety check to ensure that we don't get stuck in infinite loop)
         #
-        while (current_state != self.end_state and len(path) < self.num_states):
+        while current_state != self.goal_state and len(path) < self.num_states:
 
             # For all of the next states, determine the state with the highest Q value
             #
@@ -169,9 +165,9 @@ class QLearnAgent():
             best_next_state = possible_next_states[0]
             best_next_state_reward = self.Q[current_state][best_next_state]
 
-            for i in range(1, len(possible_next_states), 1):
+            for i in range(1, len(possible_next_states)):
                 potential_next_state = possible_next_states[i]
-                if (self.Q[current_state][potential_next_state] > best_next_state_reward):
+                if self.Q[current_state][potential_next_state] > best_next_state_reward:
                     best_next_state = potential_next_state
                     best_next_state_reward = self.Q[current_state][potential_next_state]
 
@@ -187,12 +183,12 @@ class QLearnAgent():
 
     # Converts (y,x) coordinates to a numerical state
     #
-    def __maze_dims_to_state(self, y, x):
-        return (y * self.num_columns) + x
+    def __maze_dims_to_state(self, cell):
+        return cell[0] * self.num_rows + cell[1]
 
     # Converts a numerical state to (y,x) coordinates
     #
     def __state_to_maze_dims(self, state):
-        y = int(state // self.num_columns)
-        x = state % self.num_columns
+        y = int(state // self.num_rows)
+        x = state % self.num_rows
         return (y, x)

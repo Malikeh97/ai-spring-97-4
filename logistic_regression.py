@@ -51,7 +51,7 @@ if __name__ == "__main__":
     plt.axis([np.matrix(inputs)[:, 0].min() - 5, np.matrix(inputs)[:, 0].max() + 5, np.matrix(inputs)[:, 1].min() - 5,
               np.matrix(inputs)[:, 1].max() + 5])
     plt.plot(zeros_x, zeros_y, 'bo', ones_x, ones_y, 'r*')
-    # plt.show()
+    plt.show()
     landa = 0.01
     lr = 0.001
     num_iter = 100000

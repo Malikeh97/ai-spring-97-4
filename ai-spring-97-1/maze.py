@@ -4,7 +4,7 @@ import time
 import sys
 
 from displayer import *
-from solver import *
+from QLearnAgent import QLearnAgent
 from random import choice
 from six.moves import range
 from six.moves import input
@@ -42,9 +42,9 @@ class Maze:
             for j in range(self.ncols):
                 cell_value = 0
                 if self.get_cell_by_xy(j, i)[0] == 1:
-                    cell_value += 1;
+                    cell_value += 1
                 if self.get_cell_by_xy(j, i)[1] == 1:
-                    cell_value += 2;
+                    cell_value += 2
 
                 ret_val += str(cell_value)
 
@@ -186,8 +186,7 @@ class Maze:
                 current_cell = backtrack_stack.pop()
 
     def cell_is_valid(self, cell):
-        if ((cell[0] < 0 or cell[0] >= self.nrows) \
-                or (cell[1] < 0 or cell[1] >= self.ncols)):
+        if (cell[0] < 0 or cell[0] >= self.nrows) or (cell[1] < 0 or cell[1] >= self.ncols):
             return False
 
         return True
@@ -202,16 +201,18 @@ if __name__ == "__main__":
     # dfs_path = dfs_solver(m)
 
     print(">> Testing Q solver...")
-    print(m.cells)
-    Q_path = Q_solver(m)
+    agent = QLearnAgent()
+    agent.initialize(m)
+    agent.train(learning_rate=0.01, gamma=0.5, min_change_per_epoch=0.001)
+    path = agent.solve(m.start)
     try:
-        validate_answer(m, Q_path)
-        print(("Q solved maze. cost: ", len(Q_path), "cells visited"))
+        validate_answer(m, path)
+        print(("Q solved maze. cost: ", len(path), "cells visited"))
 
-        print ("Display Q solution? [y/n]")
+        print("Display Q solution? [y/n]")
         display_command = input()
         if "y" in display_command:
-            d.draw_path(Q_path)
+            d.draw_path(path)
     except AssertionError as e:
         print(("Q answer is invalid: " + e.message))
 
