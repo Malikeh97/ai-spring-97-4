@@ -2,7 +2,6 @@
 # License: BSD 3 clause
 
 import numpy as np
-from numpy import linalg
 import pylab as pl
 
 
