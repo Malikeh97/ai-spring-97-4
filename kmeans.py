@@ -6,17 +6,34 @@ np.seterr(all='raise')
 
 
 def read_file():
-    data = pd.read_csv('cars.csv')
-    data.head()
+    with open('cars.csv') as f:
+        content = f.readlines()
+    content = [x.strip().split(',') for x in content]
+    del content[0]
+    missing = []
+    for i in range(len(content)):
+        for j in range(len(content[i])):
+            try:
+                content[i][j] = float(content[i][j])
+            except ValueError:
+                content[i][j] = 0.0
+                missing.append((i, j))
 
-    mpg = normalize(data['mpg'].values)
-    cubicinches = normalize(data['cubicinches'].values)
-    hp = normalize(data['hp'].values)
-    weightlbs = normalize(data['weightlbs'].values)
-    time_to_60 = normalize(data['time-to-60'].values)
-    year = normalize(data['year'].values)
+    return content, missing
 
-    return np.array(list(zip(mpg, cubicinches, hp, weightlbs, time_to_60, year)))
+
+# def read_file():
+#     data = pd.read_csv('cars.csv')
+#     data.head()
+#
+#     mpg = normalize(data['mpg'].values)
+#     cubicinches = normalize(data['cubicinches'].values)
+#     hp = normalize(data['hp'].values)
+#     weightlbs = normalize(data['weightlbs'].values)
+#     time_to_60 = normalize(data['time-to-60'].values)
+#     year = normalize(data['year'].values)
+#
+#     return np.array(list(zip(mpg, cubicinches, hp, weightlbs, time_to_60, year)))
 
 
 def initial_centroids(X, k):
@@ -42,30 +59,37 @@ def compute_error(C, X, clusters):
 
 
 def main():
-    X = read_file()
+    inputs, missing = read_file()
+    inputs = np.array(inputs)
+
+    cols_average = np.mean(inputs, axis=0)
+    for m in missing:
+        inputs[m[0], m[1]] = cols_average[m[1]]
+
+    inputs = (inputs - cols_average) / np.std(inputs, axis=0)
 
     errors = []
-    maxk = 20
-    for k in range(1, maxk):
+    max_k = 20
+    for k in range(1, max_k):
         # k = 2
         # C = initial_centroids(X, k)
         print(k)
-        C = X[:k, :]
+        C = inputs[:k, :]
         # Cluster Labels (0, 1, 2, ..., k - 1)
-        clusters = np.zeros(len(X), dtype=np.int)
+        clusters = np.zeros(len(inputs), dtype=np.int)
         for m in range(200):
-            for i in range(len(X)):
-                distances = dist(X[i], C)
+            for i in range(len(inputs)):
+                distances = dist(inputs[i], C)
                 clusters[i] = np.argmin(distances)
 
             for i in range(k):
-                points = [X[j] for j in range(len(X)) if clusters[j] == i]
+                points = [inputs[j] for j in range(len(inputs)) if clusters[j] == i]
                 C[i] = np.mean(points, axis=0)
 
-        errors.append(compute_error(C, X, clusters))
+        errors.append(compute_error(C, inputs, clusters))
 
-    plt.axis([0, maxk, 0, errors[0] + 1])
-    plt.plot([x for x in range(1, maxk)], errors, 'o-')
+    plt.axis([0, max_k, 0, errors[0] + 1])
+    plt.plot([x for x in range(1, max_k)], errors, 'o-')
     plt.show()
 
 
