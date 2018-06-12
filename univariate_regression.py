@@ -15,52 +15,61 @@ def read_file():
     return content
 
 
-def mean_average_error(b, m, x, init_y):
-    n = float(init_y.shape[1])
+def mean_average_error(b, m, x, y):
+    n = float(y.shape[1])
     tmp = np.abs(y - (m * x + b))
     total_error = np.sum(tmp)
     return total_error / n
 
 
-def compute_error_for_line_given_points(b, m, x, init_y):
-    n = float(init_y.shape[1])
+def compute_error_for_line_given_points(b, m, x, y):
+    n = float(y.shape[1])
     total_error = np.sum(np.power(y - (m * x + b), 2))
     return total_error / (n * 2)
 
 
-def step_gradient(b, m, x, init_y, lrate):
-    n = float(init_y.shape[1])
-    tmp = init_y - ((m * x) + b)
+def step_gradient(b, m, x, y, learning_rate):
+    n = float(y.shape[1])
+    tmp = y - ((m * x) + b)
     # tmp = np.power(tmp, 2)
     b_gradient = -(1 / n) * np.sum(tmp)
     m_gradient = -(1 / n) * tmp * x.T
-    current_b = b - (lrate * b_gradient)
-    current_m = m - (lrate * m_gradient[0, 0])
+    current_b = b - (learning_rate * b_gradient)
+    current_m = m - (learning_rate * m_gradient[0, 0])
     return current_b, current_m
 
 
-def univariate_regression(x, init_y, lrate, iters):
+def univariate_regression(x, y, learning_rate, num_of_iter):
     m = b = 0
 
-    errors = [compute_error_for_line_given_points(b, m, x, init_y)]
-    for i in range(iters):
-        b, m = step_gradient(b, m, x, init_y, lrate)
-        errors.append(compute_error_for_line_given_points(b, m, x, init_y))
+    errors = [compute_error_for_line_given_points(b, m, x, y)]
+    for i in range(num_of_iter):
+        b, m = step_gradient(b, m, x, y, learning_rate)
+        errors.append(compute_error_for_line_given_points(b, m, x, y))
     return b, m, errors
 
 
-if __name__ == "__main__":
+def main():
     inputs = read_file()
     x1 = np.matrix([x[COLNUM[0]] for x in inputs])
     x2 = np.matrix([x[COLNUM[1]] for x in inputs])
     y = np.matrix([x[COLNUM[2]] for x in inputs])
     learning_rate = 0.01
     num_of_iter = 10000
+
+    # plt.figure(1)
+    # plt.plot(x1, y, 'bo')
+    # plt.axis([-5, x1.max() + 5, -5, y.max() + 5])
+    # plt.ylabel('Price')
+    # plt.xlabel('Crime')
+    #
+    # plt.figure(2)
     # plt.plot(x2, y, 'bo')
-    # plt.axis([0, x1.max(), 0, y.max()])
-    # plt.ylabel('MEDV')
-    # plt.xlabel('CRIM')
+    # plt.axis([-5, x2.max() + 5, -5, y.max() + 5])
+    # plt.ylabel('Price')
+    # plt.xlabel('Tax')
     # plt.show()
+
     b1, m1, errors1 = univariate_regression(x1, y, learning_rate, num_of_iter)
     b2, m2, errors2 = univariate_regression(x2, y, learning_rate, num_of_iter)
 
@@ -75,6 +84,7 @@ if __name__ == "__main__":
     print('MAE = %f' % mean_average_error(b2, m2, x2, y))
 
     plt.figure(1)
+    plt.title('Crime')
     plt.subplot(211)
     plt.axis([0, x1.max(), 0, y.max()])
     x_arr = np.array(x1)[0]
@@ -88,6 +98,7 @@ if __name__ == "__main__":
     plt.plot(errors1)
 
     plt.figure(2)
+    plt.title('Tax')
     plt.subplot(211)
     plt.axis([0, x2.max(), 0, y.max()])
     x_arr = np.array(x2)[0]
@@ -100,3 +111,7 @@ if __name__ == "__main__":
     plt.ylabel('err')
     plt.plot(errors2)
     plt.show()
+
+
+if __name__ == "__main__":
+    main()
