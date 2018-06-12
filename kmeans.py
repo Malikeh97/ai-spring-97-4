@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from matplotlib import pyplot as plt
 
 np.seterr(all='raise')
@@ -20,20 +19,6 @@ def read_file():
                 missing.append((i, j))
 
     return content, missing
-
-
-# def read_file():
-#     data = pd.read_csv('cars.csv')
-#     data.head()
-#
-#     mpg = normalize(data['mpg'].values)
-#     cubicinches = normalize(data['cubicinches'].values)
-#     hp = normalize(data['hp'].values)
-#     weightlbs = normalize(data['weightlbs'].values)
-#     time_to_60 = normalize(data['time-to-60'].values)
-#     year = normalize(data['year'].values)
-#
-#     return np.array(list(zip(mpg, cubicinches, hp, weightlbs, time_to_60, year)))
 
 
 def initial_centroids(X, k):
