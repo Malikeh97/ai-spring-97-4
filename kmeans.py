@@ -51,7 +51,7 @@ def main():
     for m in missing:
         inputs[m[0], m[1]] = cols_average[m[1]]
 
-    inputs = (inputs - cols_average) / np.std(inputs, axis=0)
+    inputs = ((inputs - cols_average) / np.std(inputs, axis=0)).astype(np.float128)
 
     errors = []
     max_k = 20
@@ -60,6 +60,9 @@ def main():
         # C = initial_centroids(X, k)
         print(k)
         C = inputs[:k, :]
+        # a = np.random.randint(inputs.shape[0], size=k)
+        # C = inputs[a, :]
+        # print(a)
         # Cluster Labels (0, 1, 2, ..., k - 1)
         clusters = np.zeros(len(inputs), dtype=np.int)
         for m in range(200):
