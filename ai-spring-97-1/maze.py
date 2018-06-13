@@ -207,7 +207,7 @@ if __name__ == "__main__":
     path = agent.solve(m.start)
     try:
         validate_answer(m, path)
-        print(("Q solved maze. cost: ", len(path), "cells visited"))
+        print("Q solved maze. cost: %d cells visited" % len(path))
 
         print("Display Q solution? [y/n]")
         display_command = input()
