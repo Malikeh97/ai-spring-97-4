@@ -56,8 +56,8 @@ def main():
     plt.show()
     num_of_iters = 100000
     learning_rate = 0.001
-    landa = 0.01
-    T = logistic_regression(X, Y, num_of_iters, learning_rate, landa)
+    landa = 0.0
+    T = logistic_regression(X, Y, learning_rate, num_of_iters, landa)
     print(T)
     final_z = np.dot(X, T)
     final_h = sigmoid(final_z)
