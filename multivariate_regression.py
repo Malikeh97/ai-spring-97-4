@@ -13,25 +13,25 @@ def read_file():
 
 def mean_average_error(init_B, init_x, init_y):
     n = float(init_y.shape[1])
-    e = init_y - (init_B.T * init_x.T)
+    e = init_B.T * init_x.T - init_y
     total_error = np.sum(np.abs(e))
     return total_error / n
 
 
 def compute_error(init_B, init_x, init_y, landa):
     n = float(init_y.shape[1])
-    tmp = init_y - (init_B.T * init_x.T)
+    tmp = init_B.T * init_x.T - init_y
     total_error = np.sum(np.power(tmp, 2))
-    l2norm = landa / 2 * np.sum(np.power(init_B, 2))
-    return total_error / (n * 2) + l2norm
+    l2norm = landa * np.sum(np.power(init_B, 2))
+    return (total_error + l2norm) / (n * 2)
 
 
 def step_gradient(init_B, init_x, init_y, learning_rate, landa):
     n = float(init_y.shape[1])
-    tmp = init_y - (np.dot(init_B.T, init_x.T))
+    tmp = np.dot(init_B.T, init_x.T) - init_y
     l2norm = landa * init_B
-    B_gradient = -(1 / n) * np.dot(tmp, init_x).T + l2norm
-    new_B = init_B - (learning_rate * B_gradient)
+    B_gradient = np.dot(tmp, init_x).T + l2norm
+    new_B = init_B - (learning_rate / n * B_gradient)
     return new_B
 
 
